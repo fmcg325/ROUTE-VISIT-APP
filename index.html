@@ -1373,6 +1373,7 @@ document.getElementById('saveBtn').addEventListener('click', async ()=>{
     }
 
     status.textContent = 'Visit saved.';
+    clearDraft();
     document.getElementById('outletSelect').value = '';
     document.getElementById('outletManual').style.display = 'none';
     document.getElementById('outletManual').value = '';
@@ -1421,10 +1422,112 @@ async function checkReminders(){
   }catch(err){ /* fail silently */ }
 }
 
+// --- new: auto-save a draft of the in-progress visit, so locking/minimizing the screen never loses data ---
+const DRAFT_FIELD_IDS = ['outletManual','outletAddress','visitDate','gpsLat','gpsLng',
+  'myQty','availabilityPct','oosReason',
+  'compBrand','compQty','compPrice','compPosition','visibilityVs',
+  'myPrice','promoType',
+  'visibilityGP','shelfSpace',
+  'customerFeedback','opportunityNotes',
+  'casesOrdered','estimatedOpportunity','potentialNextOrder','lastOrderDate','deliveryDate','orderNotes',
+  'nextMeetingDate','nextMeetingTime','actionRequired','followUpOwner',
+  'extraNotes'];
+
+function collectDraftData(){
+  const data = {
+    outletSelect: document.getElementById('outletSelect').value,
+    fields: {},
+    ynState: Object.assign({}, ynState),
+    photoState: Object.assign({}, photoState)
+  };
+  DRAFT_FIELD_IDS.forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) data.fields[id] = el.value;
+  });
+  return data;
+}
+
+function saveDraftToStorage(){
+  try{
+    const data = collectDraftData();
+    const hasContent = data.outletSelect || data.fields.outletManual ||
+      Object.values(data.ynState).some(Boolean) ||
+      Object.values(data.photoState).some(Boolean) ||
+      Object.values(data.fields).some(v => v);
+    if(hasContent){
+      storageSet('visit-draft', JSON.stringify(data));
+    }
+  }catch(e){ /* fail silently */ }
+}
+
+function clearDraft(){
+  try{ localStorage.removeItem('visit-draft'); }catch(e){ /* ignore */ }
+}
+
+function applyYNStateToDOM(){
+  document.querySelectorAll('.yn[data-key]').forEach(group=>{
+    const key = group.dataset.key;
+    const val = ynState[key];
+    group.querySelectorAll('button').forEach(b=>{
+      b.classList.remove('sel-yes','sel-no');
+      if(val && b.dataset.v === val) b.classList.add(val === 'yes' ? 'sel-yes' : 'sel-no');
+    });
+  });
+}
+
+function applyPhotoStateToDOM(){
+  document.querySelectorAll('.photo-box[data-photo-key]').forEach(box=>{
+    const src = photoState[box.dataset.photoKey];
+    if(src){
+      box.innerHTML = `<img src="${src}">
+        <label class="photo-btn"><span>📷</span>Retake<input type="file" accept="image/*" capture="environment" class="hidden-file"></label>`;
+    }
+  });
+}
+
+function restoreDraftIfAny(){
+  const res = storageGet('visit-draft');
+  if(!res) return;
+  try{
+    const data = JSON.parse(res.value);
+
+    DRAFT_FIELD_IDS.forEach(id=>{
+      if(data.fields && data.fields[id] !== undefined){
+        const el = document.getElementById(id);
+        if(el) el.value = data.fields[id];
+      }
+    });
+
+    if(data.outletSelect){
+      document.getElementById('outletSelect').value = data.outletSelect;
+      document.getElementById('outletSelect').dispatchEvent(new Event('change'));
+    }
+    if(data.fields && data.fields.outletManual){
+      document.getElementById('outletManual').style.display = 'block';
+    }
+
+    ynState = data.ynState || {};
+    photoState = Object.assign({shelf:null, freezer:null, promo:null, competitor:null, arrival:null}, data.photoState || {});
+    applyYNStateToDOM();
+    applyPhotoStateToDOM();
+    updatePriceDiff();
+    calcScore();
+
+    document.getElementById('statusMsg').textContent = 'Restored your unsaved visit — pick up where you left off.';
+  }catch(e){ /* corrupted draft, ignore */ }
+}
+
+// save the draft whenever the screen locks, the app is minimized/backgrounded, or on a regular timer as backup
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden) saveDraftToStorage(); });
+window.addEventListener('pagehide', saveDraftToStorage);
+window.addEventListener('blur', saveDraftToStorage);
+setInterval(saveDraftToStorage, 5000);
+
 loadWeeklySchedule();
 loadOutlets();
 checkReminders();
 renderDashboard();
+restoreDraftIfAny();
 </script>
 </body>
 </html>
