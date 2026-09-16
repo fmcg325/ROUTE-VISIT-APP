@@ -1022,12 +1022,22 @@ function loadWeeklySchedule(){
     const res = storageGet('weekly-schedule');
     weeklySchedule = res ? JSON.parse(res.value) : {};
   }catch(e){ weeklySchedule = {}; }
+
+  // Sunday and Saturday are not worked — drop any weekend entries saved before this change
+  if(weeklySchedule.Sunday || weeklySchedule.Saturday){
+    delete weeklySchedule.Sunday;
+    delete weeklySchedule.Saturday;
+    storageSet('weekly-schedule', JSON.stringify(weeklySchedule));
+  }
 }
+
+// Weekend excluded from the schedule editor — DAYS itself stays 7 days so date lookups (getDay()) stay correct.
+const WORK_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
 
 function renderScheduleEditor(){
   const container = document.getElementById('scheduleDayList');
   if(!container) return;
-  container.innerHTML = DAYS.map(day=>{
+  container.innerHTML = WORK_DAYS.map(day=>{
     const selected = weeklySchedule[day] || [];
     const options = outlets.map(o=>{
       const checked = selected.includes(o.name) ? 'checked' : '';
