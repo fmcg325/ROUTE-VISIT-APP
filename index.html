@@ -486,6 +486,7 @@ function storageSet(key, value){
       if(val !== confirmVal){ errorEl.textContent = 'PINs do not match.'; return; }
       localStorage.setItem('routeAppPin', val);
       overlay.classList.add('hidden');
+      try{ sessionStorage.setItem('pinUnlockedThisSession', '1'); }catch(e){ /* ignore */ }
       return;
     }
 
@@ -499,6 +500,7 @@ function storageSet(key, value){
 
     if(val === localStorage.getItem('routeAppPin')){
       overlay.classList.add('hidden');
+      try{ sessionStorage.setItem('pinUnlockedThisSession', '1'); }catch(e){ /* ignore */ }
     }else{
       errorEl.textContent = 'Incorrect PIN. Try again.';
       input.value = '';
@@ -511,7 +513,17 @@ function storageSet(key, value){
     render();
   });
 
-  render();
+  // Skip the lock screen if this device already unlocked earlier in the same session —
+  // prevents a background reload (e.g. triggered by opening the camera for a photo) from
+  // logging you out mid-visit.
+  let alreadyUnlocked = false;
+  try{ alreadyUnlocked = sessionStorage.getItem('pinUnlockedThisSession') === '1'; }catch(e){ /* ignore */ }
+
+  if(alreadyUnlocked && mode === 'unlock'){
+    overlay.classList.add('hidden');
+  }else{
+    render();
+  }
 })();
 
 const DEFAULT_STORES = ["GF63 Northmead Mall","GF23 Kempton Sq","GF09 Oakfields","GF05 Witpoortjie",
@@ -1524,6 +1536,7 @@ function restoreDraftIfAny(){
     calcScore();
 
     document.getElementById('statusMsg').textContent = 'Restored your unsaved visit — pick up where you left off.';
+    switchToTab('outlet');
   }catch(e){ /* corrupted draft, ignore */ }
 }
 
