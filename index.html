@@ -227,7 +227,7 @@
       <p style="font-size:12px;color:#8A7860;margin-top:-6px;">Take a photo of the outside/front of the store to confirm arrival. The Stock, Competitor, Pricing, Display, Customer, Orders, Evidence and Notes tabs stay locked until outlet, GPS, and this photo are all done.</p>
       <div class="photo-box" data-photo-key="arrival" id="box-arrival">
         <span>No photo yet</span><br>
-        <label class="photo-btn"><span>📷</span>Take Photo<input type="file" accept="image/*" capture="environment" class="hidden-file"></label>
+        <label class="photo-btn"><span>📷</span>Take Photo or Upload<input type="file" accept="image/*" class="hidden-file"></label>
       </div>
     </div>
     <div class="card">
@@ -286,7 +286,7 @@
       <label class="field-label">Competitor photo (optional)</label>
       <div class="photo-box" data-photo-key="competitor" id="box-competitor">
         <span>No photo yet</span><br>
-        <label class="photo-btn"><span>📷</span>Take Photo<input type="file" accept="image/*" capture="environment" class="hidden-file"></label>
+        <label class="photo-btn"><span>📷</span>Take Photo or Upload<input type="file" accept="image/*" class="hidden-file"></label>
       </div>
     </div>
   </section>
@@ -375,21 +375,21 @@
   <section id="tab-evidence" class="tab">
     <div class="card">
       <h2>Evidence</h2>
-      <p style="font-size:12px;color:#8A7860;margin-top:-6px;">Photos open your camera directly — this confirms you were on-site when the photo was taken.</p>
+      <p style="font-size:12px;color:#8A7860;margin-top:-6px;">Tap a photo box to choose Camera or Gallery.</p>
       <label class="field-label">Shelf photo</label>
       <div class="photo-box" data-photo-key="shelf" id="box-shelf">
         <span>No photo yet</span><br>
-        <label class="photo-btn"><span>📷</span>Take Photo<input type="file" accept="image/*" capture="environment" class="hidden-file"></label>
+        <label class="photo-btn"><span>📷</span>Take Photo or Upload<input type="file" accept="image/*" class="hidden-file"></label>
       </div>
       <label class="field-label">Freezer photo</label>
       <div class="photo-box" data-photo-key="freezer" id="box-freezer">
         <span>No photo yet</span><br>
-        <label class="photo-btn"><span>📷</span>Take Photo<input type="file" accept="image/*" capture="environment" class="hidden-file"></label>
+        <label class="photo-btn"><span>📷</span>Take Photo or Upload<input type="file" accept="image/*" class="hidden-file"></label>
       </div>
       <label class="field-label">Promotion / display photo</label>
       <div class="photo-box" data-photo-key="promo" id="box-promo">
         <span>No photo yet</span><br>
-        <label class="photo-btn"><span>📷</span>Take Photo<input type="file" accept="image/*" capture="environment" class="hidden-file"></label>
+        <label class="photo-btn"><span>📷</span>Take Photo or Upload<input type="file" accept="image/*" class="hidden-file"></label>
       </div>
     </div>
   </section>
@@ -783,7 +783,7 @@ function wirePhotoBox(boxEl){
       photoState[boxEl.dataset.photoKey] = ev.target.result;
       boxEl.classList.remove('field-missing');
       boxEl.innerHTML = `<img src="${ev.target.result}">
-        <label class="photo-btn"><span>📷</span>Retake<input type="file" accept="image/*" capture="environment" class="hidden-file"></label>`;
+        <label class="photo-btn"><span>📷</span>Retake or Upload<input type="file" accept="image/*" class="hidden-file"></label>`;
     };
     reader.readAsDataURL(file);
   });
@@ -792,7 +792,7 @@ document.querySelectorAll('.photo-box[data-photo-key]').forEach(wirePhotoBox);
 function resetPhotos(){
   photoState = {shelf:null, freezer:null, promo:null, competitor:null, arrival:null};
   document.querySelectorAll('.photo-box[data-photo-key]').forEach(box=>{
-    box.innerHTML = `<span>No photo yet</span><br><label class="photo-btn"><span>📷</span>Take Photo<input type="file" accept="image/*" capture="environment" class="hidden-file"></label>`;
+    box.innerHTML = `<span>No photo yet</span><br><label class="photo-btn"><span>📷</span>Take Photo or Upload<input type="file" accept="image/*" class="hidden-file"></label>`;
   });
 }
 
@@ -1502,7 +1502,7 @@ function applyPhotoStateToDOM(){
     const src = photoState[box.dataset.photoKey];
     if(src){
       box.innerHTML = `<img src="${src}">
-        <label class="photo-btn"><span>📷</span>Retake<input type="file" accept="image/*" capture="environment" class="hidden-file"></label>`;
+        <label class="photo-btn"><span>📷</span>Retake or Upload<input type="file" accept="image/*" class="hidden-file"></label>`;
     }
   });
 }
